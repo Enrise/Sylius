@@ -15,7 +15,8 @@ use Payum\Core\Security\GenericTokenFactoryInterface;
 use Payum\Core\Security\TokenInterface;
 use Sylius\Bundle\PayumBundle\Payum\Action\AbstractCapturePaymentAction;
 use Sylius\Component\Core\Model\AdjustmentInterface;
-use Sylius\Component\Core\Model\PaymentInterface;
+use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Payment\Model\PaymentInterface;
 
 class CapturePaymentUsingExpressCheckoutAction extends AbstractCapturePaymentAction
 {
@@ -33,7 +34,7 @@ class CapturePaymentUsingExpressCheckoutAction extends AbstractCapturePaymentAct
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     protected function composeDetails(PaymentInterface $payment, TokenInterface $token)
     {
@@ -61,7 +62,7 @@ class CapturePaymentUsingExpressCheckoutAction extends AbstractCapturePaymentAct
             $m++;
         }
 
-        if (0 !== $taxTotal = $order->getAdjustmentsTotal(AdjustmentInterface::TAX_ADJUSTMENT)) {
+        if (0 !== $taxTotal = $this->calculateNonNeutralTaxTotal($order)) {
             $details['L_PAYMENTREQUEST_0_NAME'.$m] = 'Tax Total';
             $details['L_PAYMENTREQUEST_0_AMT'.$m]  = round($taxTotal / 100, 2);
             $details['L_PAYMENTREQUEST_0_QTY'.$m]  = 1;
@@ -84,5 +85,17 @@ class CapturePaymentUsingExpressCheckoutAction extends AbstractCapturePaymentAct
         }
 
         $payment->setDetails($details);
+    }
+
+    private function calculateNonNeutralTaxTotal(OrderInterface $order)
+    {
+        $nonNeutralTaxTotal = 0;
+        foreach ($order->getAdjustments(AdjustmentInterface::TAX_ADJUSTMENT) as $taxAdjustment) {
+            if (!$taxAdjustment->isNeutral()) {
+                $nonNeutralTaxTotal = $taxAdjustment->getAmount();
+            }
+        }
+
+        return $nonNeutralTaxTotal;
     }
 }

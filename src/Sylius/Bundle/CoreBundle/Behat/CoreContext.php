@@ -106,6 +106,8 @@ class CoreContext extends DefaultContext
             $this->createPayment($order, $paymentMethod);
 
             $order->setCurrency('EUR');
+            $order->setPaymentState(PaymentInterface::STATE_COMPLETED);
+
             $order->complete();
 
             $shipmentProcessor->updateShipmentStates($order->getShipments(), ShipmentTransitions::SYLIUS_PREPARE);
@@ -142,11 +144,14 @@ class CoreContext extends DefaultContext
             $order->addItem($item);
         }
 
+
         $order->calculateTotal();
         $order->complete();
 
         $this->getService('sylius.order_processing.payment_processor')->createPayment($order);
         $this->getService('event_dispatcher')->dispatch(SyliusCartEvents::CART_CHANGE, new GenericEvent($order));
+
+        $order->setPaymentState(PaymentInterface::STATE_COMPLETED);
 
         $manager->persist($order);
         $manager->flush();
@@ -362,7 +367,11 @@ class CoreContext extends DefaultContext
             $calculator = array_key_exists('calculator', $data) ? str_replace(' ', '_', strtolower($data['calculator'])) : DefaultCalculators::PER_ITEM_RATE;
             $configuration = array_key_exists('configuration', $data) ? $this->getConfiguration($data['configuration']) : null;
 
-            $this->thereIsShippingMethod($data['name'], $data['zone'], $calculator, $configuration, false);
+            if (!isset($data['enabled'])) {
+                $data['enabled'] = 'yes';
+            }
+
+            $this->thereIsShippingMethod($data['name'], $data['zone'], $calculator, $configuration, 'yes' === $data['enabled'], false);
         }
 
         $this->getEntityManager()->flush();
@@ -372,7 +381,7 @@ class CoreContext extends DefaultContext
      * @Given /^I created shipping method "([^""]*)" within zone "([^""]*)"$/
      * @Given /^There is shipping method "([^""]*)" within zone "([^""]*)"$/
      */
-    public function thereIsShippingMethod($name, $zoneName, $calculator = DefaultCalculators::PER_ITEM_RATE, array $configuration = null, $flush = true)
+    public function thereIsShippingMethod($name, $zoneName, $calculator = DefaultCalculators::PER_ITEM_RATE, array $configuration = null, $enabled = true, $flush = true)
     {
         /* @var $method ShippingMethodInterface */
         $method = $this
@@ -384,6 +393,7 @@ class CoreContext extends DefaultContext
         $method->setZone($this->findOneByName('zone', $zoneName));
         $method->setCalculator($calculator);
         $method->setConfiguration($configuration ?: array('amount' => 2500));
+        $method->setEnabled($enabled);
 
         $manager = $this->getEntityManager();
         $manager->persist($method);

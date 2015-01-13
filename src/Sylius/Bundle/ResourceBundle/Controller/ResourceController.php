@@ -175,7 +175,7 @@ class ResourceController extends FOSRestController
             $resource = $this->domainManager->create($resource);
 
             if ($this->config->isApiRequest()) {
-                return $this->handleView($this->view($resource));
+                return $this->handleView($this->view($resource, 201));
             }
 
             if (null === $resource) {
@@ -209,15 +209,13 @@ class ResourceController extends FOSRestController
     public function updateAction(Request $request)
     {
         $resource = $this->findOr404($request);
-        $form = $this->getForm($resource);
-        $method = $request->getMethod();
+        $form     = $this->getForm($resource);
 
-        if (in_array($method, array('POST', 'PUT', 'PATCH')) &&
-            $form->submit($request, !$request->isMethod('PATCH'))->isValid()) {
+        if (in_array($request->getMethod(), array('POST', 'PUT', 'PATCH')) && $form->submit($request, !$request->isMethod('PATCH'))->isValid()) {
             $this->domainManager->update($resource);
 
             if ($this->config->isApiRequest()) {
-                return $this->handleView($this->view($resource));
+                return $this->handleView($this->view($resource, 204));
             }
 
             return $this->redirectHandler->redirectTo($resource);
@@ -246,8 +244,7 @@ class ResourceController extends FOSRestController
      */
     public function deleteAction(Request $request)
     {
-        $resource = $this->findOr404($request);
-        $this->domainManager->delete($resource);
+        $this->domainManager->delete($this->findOr404($request));
 
         if ($this->config->isApiRequest()) {
             return $this->handleView($this->view());
@@ -328,7 +325,13 @@ class ResourceController extends FOSRestController
             return $this->container->get('form.factory')->createNamed('', $this->config->getFormType(), $resource);
         }
 
-        return $this->createForm($this->config->getFormType(), $resource);
+        $form =  $this->config->getFormType();
+
+        if (strpos($form, '\\') !== false) {
+            $form = new $form;
+        }
+
+        return $this->createForm($form, $resource);
     }
 
     /**

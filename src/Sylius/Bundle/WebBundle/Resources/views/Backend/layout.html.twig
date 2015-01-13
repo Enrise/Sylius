@@ -8,7 +8,7 @@
         </title>
         <meta charset="UTF-8">
 
-        <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Open+Sans:300italic,400,300,700&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 
         {% block stylesheets %}
             <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.1/css/bootstrap.css" type="text/css" />
@@ -17,6 +17,7 @@
                 'bundles/syliusweb/css/select2.css'
                 'bundles/syliusweb/css/datepicker3.css'
                 'bundles/syliusweb/css/backend.css'
+                'bundles/syliusresource/css/form-collection.css'
             %}
                 <link rel="stylesheet" href="{{ asset_url }}" type="text/css" />
             {% endstylesheets %}
@@ -80,6 +81,7 @@
                 'bundles/syliusweb/js/select2.js'
                 'bundles/syliusweb/js/bootstrap-datepicker.js'
                 'bundles/syliusweb/js/backend.js'
+                'bundles/syliusresource/js/form-collection.js'
             %}
                 <script type="text/javascript" src="{{ asset_url }}"></script>
             {% endjavascripts %}

@@ -12,7 +12,6 @@
 namespace Sylius\Bundle\AddressingBundle\Form\Type;
 
 use Sylius\Bundle\ResourceBundle\Form\Type\AbstractResourceType;
-use Sylius\Component\Addressing\Model\ZoneInterface;
 use Symfony\Component\Form\FormBuilderInterface;
 
 /**
@@ -55,7 +54,8 @@ class ZoneType extends AbstractResourceType
             ))
             ->add('type', 'sylius_zone_type_choice')
             ->add('members', 'sylius_zone_member_collection', array(
-                'label' => 'sylius.form.zone.members',
+                'label'            => false,
+                'button_add_label' => 'sylius.zone.add_member',
             ))
         ;
 
